@@ -1,11 +1,12 @@
 FROM debian:latest
 
 ARG GIT_SHA=5d99f2a7da4820f015fb5af89be3fb66f3a868d3
+ARG REPO=git://github.com/ariya/phantomjs.git
 
 # Dependencies we just need for building phantomjs
 ENV buildDependencies\
   wget unzip python build-essential g++ flex bison gperf\
-  ruby perl libssl-dev libpng-dev git
+  ruby perl libssl-dev libpng-dev git libx11-xcb-dev
 
 # Dependencies we need for running phantomjs
 ENV phantomJSDependencies\
@@ -14,11 +15,16 @@ ENV phantomJSDependencies\
 # Installing phantomjs
 RUN \
     # Installing dependencies
-    apt-get update -yqq \
-&&  apt-get install -fyqq ${buildDependencies} ${phantomJSDependencies} \
-&&  git clone git://github.com/ariya/phantomjs.git \
+    echo "$REPO/commit/$GIT_SHA" \
+&&  apt-get update -yqq \
+&&  apt-get install -fyqq ${buildDependencies} ${phantomJSDependencies} 
+
+RUN git clone ${REPO} \
 &&  cd phantomjs \
+&&  git config --global user.email "you@example.com" \
+&&  git config --global user.name "Your Name" \
 &&  git checkout ${GIT_SHA} \
+&&  git cherry-pick d42ddc8af3de627b6d4e749536f8746ad17f88f5 \
 &&  git submodule init \
 &&  git submodule update \
     # Building phantom
